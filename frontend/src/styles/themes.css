@@ -1,0 +1,134 @@
+:root,
+html[data-theme="light"] {
+  color-scheme: light;
+  --color-canvas: #fafafa;
+  --color-canvas-muted: #fafafa;
+  --color-canvas-accent: #fafafa;
+
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f5f5f7;
+  --color-surface-strong: #f9fafb;
+  --color-surface-inverse: var(--neutral-950);
+
+  --color-border-subtle: #e5e7eb;
+  --color-border-strong: #d1d5db;
+  --color-border-accent: color-mix(
+    in srgb,
+    var(--accent-300) 62%,
+    var(--neutral-200) 38%
+  );
+
+  --color-text-primary: var(--neutral-950);
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #6b7280;
+  --color-text-inverse: var(--white);
+  --color-text-accent: var(--accent-700);
+
+  --color-accent-primary: #3b34d5;
+  --color-accent-strong: #3b34d5;
+  --color-accent-soft: color-mix(in srgb, #3b34d5 20%, transparent);
+  --color-tab-active-bg: #ecebfb;
+
+  --color-focus-ring: #3b34d5;
+  --color-selection: color-mix(in srgb, #3b34d5 20%, transparent);
+
+  --color-success-primary: var(--success-700);
+  --color-success-soft: var(--success-100);
+  --color-warning-primary: var(--warning-700);
+  --color-warning-soft: var(--warning-100);
+  --color-danger-primary: var(--danger-700);
+  --color-danger-soft: var(--danger-100);
+
+  --color-overlay: rgb(8 15 30 / 0.08);
+  --shadow-panel: 0 20px 40px -28px rgb(8 15 30 / 0.12);
+  --shadow-focus: 0 0 0 var(--border-width-focus) rgb(20 29 249 / 0.22);
+
+  --monitor-text-main-heading: 2.375rem;
+  --monitor-text-subtitle: 1rem;
+  --monitor-text-section-heading: 1.5rem;
+  --monitor-text-tab-label: 0.875rem;
+  --monitor-text-badge: 0.75rem;
+  --monitor-text-back-link: 0.875rem;
+  --monitor-text-button: 0.875rem;
+  --monitor-text-search: 0.875rem;
+}
+
+html[data-theme="dark"],
+.dark {
+  color-scheme: dark;
+
+  /* Local semantic tokens used by this codebase */
+  --color-canvas: #0a0a0a;
+  --color-canvas-muted: #0a0a0a;
+  --color-canvas-accent: #0a0a0a;
+
+  --color-surface: #171717;
+  --color-surface-subtle: #262626;
+  --color-surface-strong: #262626;
+  --color-surface-inverse: #fafafa;
+
+  --color-border-subtle: #27272a;
+  --color-border-strong: #27272a;
+  --color-border-accent: color-mix(in srgb, #5b52ff 42%, #27272a 58%);
+
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #fafafa;
+  --color-text-muted: #a1a1aa;
+  --color-text-inverse: #0a0a0a;
+  --color-text-accent: #fafafa;
+
+  --color-accent-primary: #5b52ff;
+  --color-accent-strong: #5b52ff;
+  --color-accent-soft: color-mix(in srgb, #5b52ff 20%, transparent);
+  --color-tab-active-bg: #1d1c2d;
+
+  --color-focus-ring: #5b52ff;
+  --color-selection: color-mix(in srgb, #5b52ff 42%, transparent);
+
+  --color-success-primary: #10b981;
+  --color-success-soft: color-mix(in srgb, #10b981 28%, transparent);
+  --color-warning-primary: #f59e0b;
+  --color-warning-soft: color-mix(in srgb, #f59e0b 28%, transparent);
+  --color-danger-primary: #dc2626;
+  --color-danger-soft: color-mix(in srgb, #dc2626 28%, transparent);
+
+  --color-overlay: rgb(0 0 0 / 0.32);
+  --shadow-panel: 0 20px 40px -28px rgb(0 0 0 / 0.46);
+  --shadow-focus: 0 0 0 var(--border-width-focus) rgb(91 82 255 / 0.35);
+
+  /* Compatibility aliases for incoming token sets */
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #171717;
+  --card-foreground: #fafafa;
+  --popover: #171717;
+  --popover-foreground: #fafafa;
+  --primary: #5b52ff;
+  --primary-foreground: #ffffff;
+  --secondary: #262626;
+  --secondary-foreground: #fafafa;
+  --muted: #262626;
+  --muted-foreground: #a1a1aa;
+  --accent: #262626;
+  --accent-foreground: #fafafa;
+  --destructive: #dc2626;
+  --destructive-foreground: #fafafa;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #5b52ff;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: #5b52ff;
+  --chart-2: #8b5cf6;
+  --chart-3: #06b6d4;
+  --chart-4: #10b981;
+  --chart-5: #f59e0b;
+  --sidebar: #171717;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #5b52ff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #262626;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: #27272a;
+  --sidebar-ring: #5b52ff;
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="360" viewBox="0 0 1200 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">MERD AI logo</title>
+  <desc id="desc">MERD AI logo with a blue rounded-square globe icon and serif wordmark.</desc>
+
+  <g transform="translate(36 54)">
+    <rect x="0" y="0" width="220" height="220" rx="48" fill="#3B34D5"/>
+
+    <g transform="translate(110 110)" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="0" cy="0" r="56"/>
+      <path d="M-56 0H56"/>
+      <path d="M0 -56V56"/>
+      <path d="M-42 -28C-20 -10 -20 10 -42 28"/>
+      <path d="M42 -28C20 -10 20 10 42 28"/>
+      <path d="M-36 -40C-10 -22 10 -22 36 -40"/>
+      <path d="M-36 40C-10 22 10 22 36 40"/>
+    </g>
+  </g>
+
+  <g transform="translate(300 74)">
+    <text x="0" y="132" fill="#0D163E" font-size="112" font-weight="700" font-family="'Playfair Display', Georgia, serif" letter-spacing="0.5">MERD AI</text>
+  </g>
+</svg>
