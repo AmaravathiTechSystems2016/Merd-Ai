@@ -4,7 +4,7 @@
   <desc id="desc">MERD AI logo with a blue rounded-square globe icon and serif wordmark.</desc>
 
   <g transform="translate(36 54)">
-    <rect x="0" y="0" width="220" height="220" rx="48" fill="#3B34D5"/>
+    <rect x="0" y="0" width="220" height="220" rx="48" fill="#183EEB"/>
 
     <g transform="translate(110 110)" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="0" cy="0" r="56"/>

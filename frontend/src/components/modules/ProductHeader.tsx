@@ -19,22 +19,22 @@ export function ProductHeader() {
 
   return (
     <header className="border-b border-[color:var(--color-border-subtle)] bg-[color:var(--color-surface)]/95 backdrop-blur-sm">
-      <div className="mx-auto flex w-full max-w-[var(--content-width-page)] items-center justify-between px-[var(--space-6)] py-4 md:px-[var(--space-10)]">
+      <div className="mx-auto flex w-full max-w-[var(--content-width-page)] items-center justify-between px-[var(--space-6)] py-[10px] md:px-[var(--space-10)]">
         <div className="flex items-center gap-8">
-          <Link aria-label="MERD AI" className="ml-[6px] inline-flex items-center gap-3" href="/dashboard">
+          <Link aria-label="MERD AI" className="inline-flex items-center gap-3" href="/dashboard">
             <span
-              className="flex h-9 w-9 items-center justify-center rounded-[8px]"
+              className="flex h-11 w-11 items-center justify-center rounded-[0.75rem]"
               style={{ backgroundColor: "var(--color-accent-primary)" }}
             >
               <Globe
                 aria-hidden="true"
-                size={20}
-                strokeWidth={2}
-                style={{ color: "#ffffff" }}
+                size={22}
+                strokeWidth={1.9}
+                style={{ color: "var(--color-text-inverse)" }}
               />
             </span>
             <span
-              className="[font-family:var(--font-family-heading)] text-[20px] font-bold leading-none tracking-tight"
+              className="[font-family:var(--font-family-heading)] text-[1.75rem] font-bold leading-none tracking-[-0.02em]"
               style={{ color: "var(--color-text-primary)" }}
             >
               MERD AI
@@ -60,7 +60,7 @@ export function ProductHeader() {
                       ? {
                           backgroundColor:
                             theme === "dark"
-                              ? "#1D1C2D"
+                              ? "#1A1A23"
                               : "color-mix(in srgb, var(--color-accent-primary) 14%, transparent)",
                           color: "var(--color-accent-primary)",
                         }
@@ -79,10 +79,9 @@ export function ProductHeader() {
         <div className="flex items-center gap-[var(--space-4)] text-[color:var(--color-text-muted)]">
           <button
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            className="rounded-[12px] p-2 transition-colors hover:bg-[color:var(--color-surface-subtle)] hover:text-[color:var(--color-text-primary)] focus-visible:shadow-none"
+            className="transition-colors hover:text-[color:var(--color-text-primary)]"
             onClick={toggleTheme}
             type="button"
-            style={{ color: theme === "dark" ? "#ffffff" : "#0a0a0a" }}
           >
             {theme === "dark" ? (
               <Sun size={22} strokeWidth={2} />
@@ -92,14 +91,14 @@ export function ProductHeader() {
           </button>
           <button
             aria-label="Search"
-            className="rounded-[12px] p-2 transition-colors hover:bg-[color:var(--color-surface-subtle)] hover:text-[color:var(--color-text-primary)] focus-visible:shadow-none"
+            className="transition-colors hover:text-[color:var(--color-text-primary)]"
             type="button"
           >
             <Search size={22} strokeWidth={2} />
           </button>
           <button
             aria-label="Notifications"
-            className="relative rounded-[12px] p-2 transition-colors hover:bg-[color:var(--color-surface-subtle)] hover:text-[color:var(--color-text-primary)] focus-visible:shadow-none"
+            className="relative transition-colors hover:text-[color:var(--color-text-primary)]"
             type="button"
           >
             <Bell size={22} strokeWidth={2} />
@@ -107,7 +106,7 @@ export function ProductHeader() {
           </button>
           <button
             aria-label="Account"
-            className="rounded-[12px] p-2 transition-colors hover:bg-[color:var(--color-surface-subtle)] hover:text-[color:var(--color-text-primary)] focus-visible:shadow-none"
+            className="transition-colors hover:text-[color:var(--color-text-primary)]"
             type="button"
           >
             <User size={22} strokeWidth={2} />

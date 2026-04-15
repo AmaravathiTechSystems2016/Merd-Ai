@@ -1,33 +1,24 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { JSX } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import {
-  AnimatePresence,
-  LayoutGroup,
-  motion,
-  useInView,
-  useScroll,
-} from "framer-motion";
-import {
-  ArrowLeft,
-  BarChart3,
-  Bookmark,
-  Calendar,
-  Edit3,
-  ExternalLink,
-  Landmark,
-  Scale,
-  Search,
-  Sparkles,
-  TrendingUp,
-  TreePine,
-  Users,
-} from "lucide-react";
+import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils/cn";
+// import { CategoryTabs } from "@/components/modules/monitor-workspace/PageHeader";
+import {
+  FilterBar,
+  type ArticleFilterOption,
+} from "@/components/modules/monitor-workspace/FilterBar";
+import { CategoryTabs } from "@/components/modules/monitor-workspace/CategoryTabs";
+import {
+  MonitorCard,
+  type Article,
+} from "@/components/modules/monitor-workspace/MonitorCard";
+// import { TopNav } from "@/components/modules/monitor-workspace";
+import { SideRail } from "@/components/modules/monitor-workspace/SideRail";
+import { WorkspaceBreadcrumbs } from "@/components/modules/monitor-workspace/WorkspaceBreadcrumbs";
+import { EmptyState } from "@/components/modules";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -39,17 +30,13 @@ type PestelCategory =
   | "Environmental"
   | "Legal";
 
-interface Article {
-  id: string;
-  title: string;
-  summary: string;
-  publisher: string;
-  publishedAt: string;
-  relevanceScore: number;
-  topicTags: string[];
-  imageSrc: string;
-  category: PestelCategory;
-}
+type ArticleFilterId =
+  | "high-priority"
+  | "last-7-days"
+  | "eu-policy"
+  | "trade-policy"
+  | "semiconductor"
+  | "ai-regulation";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -80,26 +67,55 @@ const ARTICLE_THUMBS: Record<PestelCategory, string> = {
   Legal: "/article-thumbs/legal.svg",
 };
 
-function resolveArticleImage(article: Article): string {
-  return `https://picsum.photos/seed/${article.id}/384/256`;
-}
+const APP_HEADER_HEIGHT = 80;
+const HEADER_FADE_DISTANCE = 120;
 
-function getTooltipMessage(score: number): string {
-  if (score >= 90) return "Critical relevance — Immediate strategic impact";
-  if (score >= 80) return "High relevance — Significant business implications";
-  if (score >= 70) return "Moderate relevance — Worth monitoring closely";
-  return "Standard relevance — Background awareness";
-}
+const ARTICLE_FILTER_OPTIONS: ArticleFilterOption[] = [
+  { id: "high-priority", label: "High Priority", group: "state" },
+  { id: "last-7-days", label: "Last 7 Days", group: "state" },
+  { id: "eu-policy", label: "EU Policy", group: "topic" },
+  { id: "trade-policy", label: "Trade Policy", group: "topic" },
+  { id: "semiconductor", label: "Semiconductor", group: "topic" },
+  { id: "ai-regulation", label: "AI Regulation", group: "topic" },
+];
 
-function formatPublishedAt(value: string): string {
+function parseHoursAgo(value: string): number | null {
   const hourMatch = value.match(/^(\d+)h ago$/i);
+  if (hourMatch) return Number(hourMatch[1]);
 
-  if (hourMatch) {
-    const hours = Number(hourMatch[1]);
-    return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+  const dayMatch = value.match(/^(\d+)d ago$/i);
+  if (dayMatch) return Number(dayMatch[1]) * 24;
+
+  return null;
+}
+
+function normalizeText(value: string): string {
+  return value.toLowerCase();
+}
+
+function articleMatchesFilter(article: Article, filterId: ArticleFilterId): boolean {
+  const haystack = normalizeText(
+    `${article.title} ${article.summary} ${article.publisher} ${article.topicTags.join(" ")}`,
+  );
+
+  switch (filterId) {
+    case "high-priority":
+      return article.relevanceScore >= 85;
+    case "last-7-days": {
+      const hoursAgo = parseHoursAgo(article.publishedAt);
+      return hoursAgo !== null ? hoursAgo <= 168 : true;
+    }
+    case "eu-policy":
+      return haystack.includes("eu") || haystack.includes("europe");
+    case "trade-policy":
+      return haystack.includes("trade");
+    case "semiconductor":
+      return haystack.includes("semiconductor");
+    case "ai-regulation":
+      return haystack.includes("ai regulation") || haystack.includes("ai governance");
+    default:
+      return true;
   }
-
-  return value;
 }
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
@@ -202,6 +218,7 @@ const ARTICLES: Article[] = [
     topicTags: ["ASEAN", "Digital Economy", "Trade Agreement"],
     imageSrc: ARTICLE_THUMBS.Political,
   },
+
   // Economic
   {
     id: "eco-1",
@@ -347,6 +364,7 @@ const ARTICLES: Article[] = [
     topicTags: ["Corporate Bonds", "Markets", "Credit"],
     imageSrc: ARTICLE_THUMBS.Economic,
   },
+
   // Social
   {
     id: "soc-1",
@@ -408,6 +426,7 @@ const ARTICLES: Article[] = [
     topicTags: ["Gen Z", "Workforce", "Strategy"],
     imageSrc: ARTICLE_THUMBS.Social,
   },
+
   // Technological
   {
     id: "tech-1",
@@ -589,6 +608,7 @@ const ARTICLES: Article[] = [
     topicTags: ["Biometrics", "Identity", "Standards"],
     imageSrc: ARTICLE_THUMBS.Technological,
   },
+
   // Environmental
   {
     id: "env-1",
@@ -626,6 +646,7 @@ const ARTICLES: Article[] = [
     topicTags: ["Renewable Energy", "Industrial", "Procurement"],
     imageSrc: ARTICLE_THUMBS.Environmental,
   },
+
   // Legal
   {
     id: "leg-1",
@@ -713,456 +734,35 @@ const ARTICLES: Article[] = [
   },
 ];
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function ScoreBadge({
-  articleId,
-  score,
-}: {
-  articleId: string;
-  score: number;
-}) {
-  const [visible, setVisible] = useState(false);
-
-  return (
-    <div className="relative">
-      <motion.div
-        className="cursor-default rounded-lg px-3 py-1 text-sm font-semibold"
-        onMouseEnter={() => setVisible(true)}
-        onMouseLeave={() => setVisible(false)}
-        whileHover={{ scale: 1.1 }}
-        transition={{ type: "spring", stiffness: 300 }}
-        style={{
-          backgroundColor:
-            "color-mix(in srgb, var(--color-accent-primary) 10%, transparent)",
-          color: "var(--color-accent-primary)",
-        }}
-      >
-        {score}
-      </motion.div>
-
-      <AnimatePresence>
-        {visible && (
-          <motion.div
-            key={`tooltip-${articleId}`}
-            className="pointer-events-none absolute bottom-full right-0 z-20 mb-2 w-64 rounded-[12px] px-4 py-3 text-xs shadow-xl"
-            style={{
-              backgroundColor: "var(--color-text-primary)",
-              color: "var(--color-text-inverse)",
-            }}
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-          >
-            {/* Arrow */}
-            <div
-              className="absolute right-3 h-0 w-0"
-              style={{
-                top: "100%",
-                borderLeft: "6px solid transparent",
-                borderRight: "6px solid transparent",
-                borderTop: "6px solid var(--color-text-primary)",
-              }}
-            />
-            <p className="text-[0.75rem] font-bold leading-none">Relevance Score</p>
-            <p className="mt-1.5 text-[0.75rem] leading-snug" style={{ opacity: 0.82 }}>
-              {getTooltipMessage(score)}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function ArticleCard({
-  article,
-  index,
-}: {
-  article: Article;
-  index: number;
-}) {
-  const cardRef = useRef<HTMLElement | null>(null);
-  const isInView = useInView(cardRef, { once: true, margin: "-120px" });
-
-  return (
-    <motion.article
-      ref={cardRef}
-      className="group cursor-pointer overflow-hidden rounded-2xl border border-[color:var(--color-border-subtle)] bg-[color:var(--color-surface)] shadow-sm transition-all duration-300 hover:shadow-xl"
-      initial={{ opacity: 0, y: 50 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{ y: -4 }}
-    >
-      <div className="flex gap-6 p-6">
-        {/* Thumbnail */}
-        <motion.div
-          className="h-[132px] w-48 shrink-0 overflow-hidden rounded-[12px] bg-[color:var(--color-surface-subtle)]"
-          whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Image
-            alt={article.title}
-            className="h-full w-full object-cover"
-            height={132}
-            src={resolveArticleImage(article)}
-            width={192}
-          />
-        </motion.div>
-
-        {/* Body */}
-        <div className="flex min-w-0 flex-1 flex-col">
-          {/* Title row */}
-          <div className="mb-3 flex items-start gap-3">
-            <motion.button
-              className="mb-2 w-fit cursor-pointer text-left text-lg font-semibold text-[color:var(--color-text-primary)] hover:text-[color:var(--color-accent-primary)]"
-              whileHover={{ x: 2 }}
-              transition={{ type: "spring", stiffness: 320, damping: 24 }}
-              type="button"
-            >
-              {article.title}
-            </motion.button>
-          </div>
-
-          {/* Summary */}
-          <p
-            className="mb-4 line-clamp-2 text-base leading-relaxed"
-            style={{ color: "var(--color-text-muted)" }}
-          >
-            {article.summary}
-          </p>
-
-          <div className="mt-auto">
-            {/* Meta */}
-            <div className="flex flex-wrap items-center gap-4 text-sm" style={{ color: "var(--color-text-muted)" }}>
-              <span>{article.publisher}</span>
-              <span>•</span>
-              <span>{formatPublishedAt(article.publishedAt)}</span>
-            </div>
-
-            {/* Actions */}
-            <div
-              className="mt-5 flex items-start justify-between gap-4 border-t pt-5"
-              style={{ borderColor: "var(--color-border-subtle)" }}
-            >
-              <div className="flex items-center gap-3">
-                <motion.button
-                  className="flex items-center gap-1 text-sm transition-colors"
-                  style={{ color: "var(--color-text-muted)" }}
-                  whileHover={{ scale: 1.05, color: "var(--color-accent-primary)" }}
-                  whileTap={{ scale: 0.95 }}
-                  type="button"
-                >
-                  <Bookmark size={16} />
-                  <span>Save</span>
-                </motion.button>
-
-                <motion.button
-                  className="flex items-center gap-1 text-sm transition-colors"
-                  style={{ color: "var(--color-text-muted)" }}
-                  whileHover={{ scale: 1.05, color: "var(--color-accent-primary)" }}
-                  whileTap={{ scale: 0.95 }}
-                  type="button"
-                >
-                  <ExternalLink size={16} />
-                  <span>Open</span>
-                </motion.button>
-
-                <motion.button
-                  className="flex items-center gap-1 text-sm transition-colors"
-                  style={{ color: "var(--color-accent-primary)" }}
-                  whileHover={{ scale: 1.05, opacity: 0.8 }}
-                  whileTap={{ scale: 0.95 }}
-                  type="button"
-                >
-                  <TrendingUp size={16} />
-                  <span>Deep dive</span>
-                </motion.button>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex flex-wrap justify-end gap-2">
-                  {article.topicTags.map((tag) => (
-                    <motion.span
-                      key={tag}
-                      className="rounded-full px-3 py-1 text-xs"
-                      style={{
-                        backgroundColor: "var(--color-surface-subtle)",
-                        color: "var(--color-text-muted)",
-                      }}
-                      whileHover={{ scale: 1.05 }}
-                      transition={{ type: "spring", stiffness: 400 }}
-                    >
-                      {tag}
-                    </motion.span>
-                  ))}
-                </div>
-
-                <div className="shrink-0">
-                  <ScoreBadge articleId={article.id} score={article.relevanceScore} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.article>
-  );
-}
+// ─── Remaining Local Section Component ────────────────────────────────────────
 
 function PestelSection({
   category,
   articles,
   isCondensed,
+  stickyTop,
   sectionRef,
 }: {
   category: PestelCategory;
   articles: Article[];
   isCondensed: boolean;
+  stickyTop: number;
   sectionRef: (el: HTMLElement | null) => void;
 }) {
   return (
     <section
-      ref={sectionRef}
+      ref={(el) => {
+        sectionRef(el);
+      }}
       className="scroll-mt-32"
       aria-label={`${category} articles`}
     >
-      <div
-        className={cn(
-          "sticky top-[58px] z-[25] mb-[var(--space-6)] bg-[color:var(--color-canvas)] transition-[margin,padding] duration-300",
-          isCondensed ? "pt-[2px] pb-[6px]" : "pt-[10px] pb-[8px]",
-        )}
-        style={{
-          marginTop: isCondensed ? -1 : 12,
-          boxShadow: "0 1px 0 var(--color-canvas)",
-        }}
-      >
-        <motion.div
-          className="group mb-[var(--space-3)] flex cursor-default items-center gap-[var(--space-3)]"
-          whileHover={{ x: 8 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        >
-          <motion.div
-            className="flex h-8 w-8 shrink-0 items-center justify-center"
-            whileHover={{ rotate: 360, scale: 1.2 }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-          >
-            <Image
-              alt=""
-              aria-hidden="true"
-              className="opacity-85 [image-rendering:crisp-edges]"
-              height={20}
-              src={PESTEL_ICONS[category]}
-              width={20}
-            />
-          </motion.div>
-          <motion.h2
-            className="[font-family:var(--font-family-heading)] text-2xl font-semibold leading-none tracking-[-0.02em] text-[color:var(--color-text-primary)] transition-colors duration-300 group-hover:text-[color:var(--color-accent-primary)]"
-          >
-            {category}
-          </motion.h2>
-          <span
-            className="text-sm font-medium"
-            style={{ color: "var(--color-text-muted)" }}
-          >
-            {articles.length} article{articles.length !== 1 ? "s" : ""}
-          </span>
-        </motion.div>
-        <motion.div
-          className="h-px origin-left"
-          style={{
-            background: "var(--color-accent-primary)",
-          }}
-          whileHover={{ scaleX: 1.05 }}
-          transition={{ duration: 0.3 }}
-        />
-      </div>
-
-      {/* Cards */}
       <div className="flex flex-col gap-[var(--space-4)]">
         {articles.map((article, index) => (
-          <ArticleCard key={article.id} article={article} index={index} />
+          <MonitorCard key={article.id} article={article} index={index} />
         ))}
       </div>
     </section>
-  );
-}
-
-function PestelNav({
-  activeTab,
-  counts,
-  scrollProgress,
-  onTabClick,
-}: {
-  activeTab: PestelCategory;
-  counts: Record<PestelCategory, number>;
-  scrollProgress: number;
-  onTabClick: (category: PestelCategory) => void;
-}) {
-  return (
-    <div className="sticky top-0 z-20 mb-0">
-      <div
-        className="relative overflow-hidden rounded-[0.75rem] border border-[color:var(--color-border-subtle)] px-[var(--space-2)] py-[8px]"
-        style={{
-          backgroundColor: "var(--color-surface)",
-          boxShadow:
-            "inset 0 1px 0 color-mix(in srgb, var(--color-border-subtle) 78%, transparent), inset 0 -1px 0 color-mix(in srgb, var(--color-border-subtle) 78%, transparent), -2px 0 10px -10px rgb(0 0 0 / 0.18), 2px 0 10px -10px rgb(0 0 0 / 0.18), 0 8px 14px -14px rgb(0 0 0 / 0.2)",
-        }}
-      >
-        <div
-          className="absolute left-[var(--space-2)] right-[var(--space-2)] top-0 h-[2px]"
-          style={{ backgroundColor: "color-mix(in srgb, var(--color-border-subtle) 70%, transparent)" }}
-        >
-          <motion.div
-            className="h-full origin-left"
-            style={{
-              scaleX: scrollProgress / 100,
-              background: "var(--color-accent-soft)",
-            }}
-          />
-        </div>
-
-        <LayoutGroup id="pestel-nav">
-          <div
-            role="tablist"
-            aria-label="PESTEL categories"
-            className="flex gap-2"
-          >
-            {PESTEL_CATEGORIES.map((category, index) => {
-              const isActive = activeTab === category;
-              return (
-                <motion.button
-                  key={category}
-                  role="tab"
-                  aria-selected={isActive}
-                  type="button"
-                  className={cn(
-                    "relative flex flex-1 items-center justify-center cursor-pointer overflow-hidden rounded-[12px] px-4 py-3 text-sm font-semibold outline-none transition-colors focus-visible:ring-2",
-                    isActive
-                      ? "font-semibold text-[color:var(--color-accent-primary)]"
-                      : "text-[#6C7280] hover:text-[color:var(--color-text-primary)]",
-                  )}
-                  style={{
-                    ["--tw-ring-color" as string]: "var(--color-focus-ring)",
-                  }}
-                  onClick={() => onTabClick(category)}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05, duration: 0.3 }}
-                  whileHover={{ scale: 1 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {isActive && (
-                    <motion.div
-                      className="absolute inset-x-[6px] inset-y-[2px] rounded-[12px]"
-                      layoutId="active-tab-bg"
-                      style={{
-                        backgroundColor: "var(--color-tab-active-bg)",
-                        boxShadow:
-                          "inset 0 0 0 1px color-mix(in srgb, var(--color-accent-primary) 14%, transparent)",
-                      }}
-                      initial={{ opacity: 0.25 }}
-                      animate={{ opacity: 1 }}
-                      transition={{
-                        type: "spring",
-                        bounce: 0.2,
-                        duration: 0.6,
-                        opacity: { duration: 0.22, delay: 0.1, ease: "easeOut" },
-                      }}
-                    />
-                  )}
-
-                  <span className="relative z-10 flex w-full items-center justify-center gap-2">
-                    <motion.span
-                      className={cn(
-                        "flex items-center",
-                        isActive ? "opacity-100" : "opacity-75",
-                      )}
-                      animate={isActive ? { rotate: [0, 10, -10, 0] } : { rotate: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <Image
-                        alt=""
-                        aria-hidden="true"
-                        className="opacity-85 transition-opacity duration-200 [image-rendering:crisp-edges]"
-                        height={16}
-                        src={PESTEL_ICONS[category]}
-                        width={16}
-                      />
-                    </motion.span>
-
-                    <span>{category}</span>
-
-                    <motion.span
-                      className="flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold"
-                      style={{
-                        backgroundColor: isActive
-                          ? "color-mix(in srgb, var(--color-accent-primary) 14%, transparent)"
-                          : "var(--color-surface-subtle)",
-                        color: isActive
-                          ? "var(--color-accent-primary)"
-                          : "var(--color-text-muted)",
-                      }}
-                      animate={isActive ? { scale: [1, 1.05, 1] } : { scale: 1 }}
-                      transition={{ duration: 0.4 }}
-                    >
-                      {counts[category]}
-                    </motion.span>
-                  </span>
-                </motion.button>
-              );
-            })}
-          </div>
-        </LayoutGroup>
-      </div>
-    </div>
-  );
-}
-
-function MonitorControlsRow() {
-  return (
-    <motion.div
-      className="mb-[var(--space-8)] flex items-center gap-[var(--space-4)]"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-    >
-      <div className="relative flex-1">
-        <Search
-          className="absolute left-[var(--space-4)] top-1/2 -translate-y-1/2 text-[color:var(--color-text-muted)]"
-          size={20}
-          strokeWidth={2}
-        />
-        <input
-          className="w-full rounded-[var(--radius-md)] border bg-[color:var(--color-surface)] py-[10px] pl-[48px] pr-[var(--space-4)] text-[var(--monitor-text-search)] text-[color:var(--color-text-primary)] outline-none placeholder:text-[color:var(--color-text-muted)] focus:border-[color:var(--color-border-strong)]"
-          style={{ borderColor: "color-mix(in srgb, var(--color-border-subtle) 72%, transparent)" }}
-          placeholder="Search keywords..."
-          type="text"
-        />
-      </div>
-
-      <button
-        className="flex items-center gap-[var(--space-2)] rounded-[var(--radius-md)] border bg-[color:var(--color-surface)] px-[var(--space-4)] py-[10px] text-[var(--monitor-text-button)] font-medium text-[color:var(--color-text-primary)]"
-        style={{ borderColor: "color-mix(in srgb, var(--color-border-subtle) 72%, transparent)" }}
-        type="button"
-      >
-        <Calendar size={18} strokeWidth={2} />
-        Last 30 days
-      </button>
-
-      <button
-        className="flex items-center gap-[var(--space-2)] rounded-[var(--radius-md)] border bg-[color:var(--color-surface)] px-[var(--space-4)] py-[10px] text-[var(--monitor-text-button)] font-medium"
-        style={{
-          borderColor: "color-mix(in srgb, var(--color-border-subtle) 72%, transparent)",
-          color: "var(--color-text-secondary)",
-        }}
-        type="button"
-      >
-        <Edit3 size={18} strokeWidth={2} />
-        Edit description
-      </button>
-    </motion.div>
   );
 }
 
@@ -1170,16 +770,44 @@ function MonitorControlsRow() {
 
 export function MonitorDetailScreen() {
   const [activeTab, setActiveTab] = useState<PestelCategory>("Political");
+  const [query, setQuery] = useState("");
+  const [activeFilters, setActiveFilters] = useState<ArticleFilterId[]>(["high-priority", "eu-policy"]);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [tabsHeight, setTabsHeight] = useState(0);
+  const [headerOffset, setHeaderOffset] = useState(APP_HEADER_HEIGHT);
   const sectionRefs = useRef<Partial<Record<PestelCategory, HTMLElement>>>({});
-  const { scrollYProgress } = useScroll();
+  const tabsRef = useRef<HTMLDivElement | null>(null);
 
-  // Grouped articles
-  const groupedArticles = PESTEL_CATEGORIES.reduce<
-    Record<PestelCategory, Article[]>
-  >(
+  const filteredArticles = ARTICLES.filter((article) => {
+    const normalizedQuery = normalizeText(query.trim());
+    const searchableContent = normalizeText(
+      `${article.title} ${article.summary} ${article.publisher} ${article.topicTags.join(" ")}`,
+    );
+
+    const matchesQuery = normalizedQuery
+      ? searchableContent.includes(normalizedQuery)
+      : true;
+
+    const stateFilters = activeFilters.filter((filterId) =>
+      ARTICLE_FILTER_OPTIONS.find((option) => option.id === filterId)?.group === "state",
+    );
+    const topicFilters = activeFilters.filter((filterId) =>
+      ARTICLE_FILTER_OPTIONS.find((option) => option.id === filterId)?.group === "topic",
+    );
+
+    const matchesStateFilters = stateFilters.every((filterId) =>
+      articleMatchesFilter(article, filterId),
+    );
+    const matchesTopicFilters =
+      topicFilters.length === 0 ||
+      topicFilters.some((filterId) => articleMatchesFilter(article, filterId));
+
+    return matchesQuery && matchesStateFilters && matchesTopicFilters;
+  });
+
+  const groupedArticles = PESTEL_CATEGORIES.reduce<Record<PestelCategory, Article[]>>(
     (acc, cat) => {
-      acc[cat] = ARTICLES.filter((a) => a.category === cat);
+      acc[cat] = filteredArticles.filter((a) => a.category === cat).slice(0, 6);
       return acc;
     },
     {
@@ -1207,20 +835,60 @@ export function MonitorDetailScreen() {
     },
   );
 
+  const visibleCategories = PESTEL_CATEGORIES.filter(
+    (category) => groupedArticles[category].length > 0,
+  );
+  const resolvedActiveTab = visibleCategories.includes(activeTab)
+    ? activeTab
+    : visibleCategories[0] ?? "Political";
+
   const isStickyHeaderCondensed = scrollProgress > 2;
+  const tabsStickyTop = headerOffset;
+  const stickyStackOffset = tabsStickyTop + (tabsHeight || 74);
 
-  // Track scroll progress percentage
   useEffect(() => {
-    return scrollYProgress.on("change", (v) => {
-      setScrollProgress(Math.round(v * 100));
-    });
-  }, [scrollYProgress]);
+    const update = () => {
+      const currentScroll = window.scrollY;
+      const maxScrollable = document.body.scrollHeight - window.innerHeight;
 
-  // IntersectionObserver for active section detection
+      setScrollProgress(
+        Math.round((currentScroll / maxScrollable) * 100),
+      );
+      setHeaderOffset(
+        APP_HEADER_HEIGHT *
+          Math.max(0, 1 - currentScroll / HEADER_FADE_DISTANCE),
+      );
+    };
+
+    window.addEventListener("scroll", update);
+    update();
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+
+    const update = () => {
+      setTabsHeight(el.getBoundingClientRect().height);
+    };
+
+    update();
+
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    window.addEventListener("resize", update);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
   useEffect(() => {
     const observers: IntersectionObserver[] = [];
 
-    PESTEL_CATEGORIES.forEach((category) => {
+    visibleCategories.forEach((category) => {
       const el = sectionRefs.current[category];
       if (!el) return;
 
@@ -1232,8 +900,7 @@ export function MonitorDetailScreen() {
         },
         {
           threshold: 0,
-          // Trigger when section reaches the top 40% of the viewport
-          rootMargin: "-120px 0px -50% 0px",
+          rootMargin: `-${stickyStackOffset + 12}px 0px -50% 0px`,
         },
       );
 
@@ -1242,18 +909,17 @@ export function MonitorDetailScreen() {
     });
 
     return () => observers.forEach((o) => o.disconnect());
-  }, []);
+  }, [stickyStackOffset, visibleCategories]);
 
   const scrollToSection = useCallback((category: PestelCategory) => {
     const el = sectionRefs.current[category];
     if (!el) return;
 
-    const stickyNavHeight = 64;
     const top =
-      el.getBoundingClientRect().top + window.scrollY - stickyNavHeight;
+      el.getBoundingClientRect().top + window.scrollY - stickyStackOffset - 12;
 
     window.scrollTo({ top, behavior: "smooth" });
-  }, []);
+  }, [stickyStackOffset]);
 
   const setSectionRef = useCallback(
     (category: PestelCategory) => (el: HTMLElement | null) => {
@@ -1262,9 +928,21 @@ export function MonitorDetailScreen() {
     [],
   );
 
+  const toggleFilter = (filterId: string) => {
+    setActiveFilters((current) =>
+      current.includes(filterId as ArticleFilterId)
+        ? current.filter((item) => item !== filterId)
+        : [...current, filterId as ArticleFilterId],
+    );
+  };
+
+  const clearAllFilters = () => {
+    setQuery("");
+    setActiveFilters([]);
+  };
+
   return (
     <>
-      {/* Global scroll progress bar */}
       <div
         className="fixed left-0 right-0 top-0 z-50 h-[3px]"
         style={{
@@ -1281,83 +959,135 @@ export function MonitorDetailScreen() {
           transition={{ duration: 0.2, ease: "easeOut" }}
         />
       </div>
+      {/* <TopNav /> */}
 
-      {/* Page body */}
-      <main
-        className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col px-8 py-10"
-        style={{ backgroundColor: "transparent" }}
-      >
-        {/* Header */}
-        <motion.header
-          className="mb-[var(--space-10)] flex flex-col"
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: [0.2, 0.7, 0.2, 1] }}
+
+      <div className="flex">
+        <SideRail />
+        <main
+          className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-6 pb-10 pt-28 md:px-8 md:pb-12 md:pt-32 xl:px-10"
+          style={{ backgroundColor: "transparent" }}
         >
-          <motion.div
-            className="mb-[var(--space-4)]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1, duration: 0.3 }}
-          >
-            <Link
-              className="inline-flex w-fit items-center gap-[var(--space-2)] text-[var(--monitor-text-back-link)] font-medium leading-none transition-colors"
-              href="/dashboard"
-              style={{ color: "var(--color-text-muted)" }}
-            >
-              <ArrowLeft size={16} strokeWidth={2} />
-              <span
-                className="text-[var(--monitor-text-back-link)] font-medium"
-                style={{ color: "var(--color-text-muted)" }}
-              >
-                Back to Dashboard
-              </span>
-            </Link>
-          </motion.div>
+          <div className="mx-auto w-full max-w-[1220px]">
+            <div className="mb-8 flex flex-col gap-5 md:mb-10">
+              <WorkspaceBreadcrumbs />
 
-          <motion.div
-            className="flex flex-col gap-[var(--space-3)]"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.35 }}
-          >
-            <h1
-              className="[font-family:var(--font-family-heading)] text-4xl font-bold leading-[1.1] tracking-[var(--letter-spacing-heading)]"
-              style={{ color: "var(--color-text-primary)" }}
-            >
-              EU Regulation
-            </h1>
-            <p
-              className="text-lg font-medium"
-              style={{ color: "var(--color-text-muted)" }}
-            >
-              Comprehensive analysis and insights
-            </p>
-          </motion.div>
-        </motion.header>
+              <div className="max-w-[840px]">
+                <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--color-text-muted)]">
+                  Monitor
+                </div>
+                <h1 className="max-w-[12ch] text-[2.35rem] font-semibold leading-[1] tracking-[-0.04em] text-[color:var(--color-text-primary)] md:text-[3.4rem]">
+                  EU Regulation
+                </h1>
+                <p className="mt-3 max-w-[40rem] text-[1.05rem] leading-8 text-[color:var(--color-text-muted)] md:text-[1.125rem]">
+                  Comprehensive analysis and insights across active regulatory
+                  developments, emerging pressure points, and the signals most
+                  likely to shape the next round of decisions.
+                </p>
+              </div>
+            </div>
 
-        <MonitorControlsRow />
-
-        <PestelNav
-          activeTab={activeTab}
-          counts={counts}
-          scrollProgress={scrollProgress}
-          onTabClick={scrollToSection}
-        />
-
-        {/* PESTEL sections */}
-        <div className="flex flex-col gap-[var(--space-16)]">
-          {PESTEL_CATEGORIES.map((category) => (
-            <PestelSection
-              key={category}
-              category={category}
-              articles={groupedArticles[category]}
-              isCondensed={isStickyHeaderCondensed}
-              sectionRef={setSectionRef(category)}
+            <FilterBar
+              activeFilters={activeFilters}
+              filterOptions={ARTICLE_FILTER_OPTIONS}
+              onClearAll={clearAllFilters}
+              onQueryChange={setQuery}
+              onRemoveFilter={toggleFilter}
+              onToggleFilter={toggleFilter}
+              query={query}
+              resultCount={filteredArticles.length}
             />
-          ))}
-        </div>
-      </main>
+          </div>
+
+          <div className="mx-auto mt-6 flex w-full max-w-[1220px] flex-col border-0 md:mt-8">
+            <div
+              className="glass-panel relative rounded-[16px] border px-2 pt-2 pb-2"
+              style={{
+                background: 'var(--monitor-pestel-shell-bg)',
+                borderColor: 'var(--monitor-pestel-shell-border)',
+                boxShadow: 'var(--monitor-pestel-shell-shadow)',
+                backdropFilter: 'var(--monitor-panel-backdrop)',
+              }}
+            >
+              <CategoryTabs
+                activeTab={resolvedActiveTab}
+                counts={counts}
+                onTabClick={scrollToSection}
+                stickyTop={tabsStickyTop}
+                tabsRef={tabsRef}
+              />
+              {filteredArticles.length > 0 && (
+                <div className="flex items-center gap-[var(--space-3)] px-2 pt-3 pb-2">
+                  <motion.div
+                    whileHover={{ scale: 1.18, rotate: -8 }}
+                    transition={{ type: "spring", stiffness: 320, damping: 18 }}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                    style={{
+                      background:
+                        resolvedActiveTab === "Political"
+                          ? "rgba(59, 40, 204, 0.08)"
+                          : resolvedActiveTab === "Economic"
+                          ? "rgba(0, 120, 212, 0.08)"
+                          : resolvedActiveTab === "Social"
+                          ? "rgba(0, 184, 212, 0.08)"
+                          : resolvedActiveTab === "Technological"
+                          ? "rgba(120, 72, 232, 0.08)"
+                          : resolvedActiveTab === "Environmental"
+                          ? "rgba(34, 197, 94, 0.08)"
+                          : resolvedActiveTab === "Legal"
+                          ? "rgba(16, 24, 40, 0.08)"
+                          : "rgba(59, 40, 204, 0.08)",
+                    }}
+                  >
+                    <Image
+                      alt=""
+                      aria-hidden="true"
+                      className="opacity-95 [image-rendering:crisp-edges]"
+                      height={22}
+                      src={PESTEL_ICONS[resolvedActiveTab]}
+                      width={22}
+                    />
+                  </motion.div>
+                  <motion.h2 className="[font-family:var(--font-family-heading)] text-2xl font-semibold leading-none tracking-[-0.02em] text-[#3B28CC] group-hover:text-[#2B1FA2] transition-colors">
+                    {resolvedActiveTab}
+                  </motion.h2>
+                  <span
+                    className="text-sm font-medium text-[#3B28CC]/80 group-hover:text-[#2B1FA2] transition-colors"
+                  >
+                    {groupedArticles[resolvedActiveTab].length} article{groupedArticles[resolvedActiveTab].length !== 1 ? "s" : ""}
+                  </span>
+                  <div className="ml-auto hidden h-px flex-1 sm:block" style={{ background: "#E0E7FF" }} />
+                </div>
+              )}
+            </div>
+            <div className="h-6" />
+
+            {filteredArticles.length === 0 ? (
+              <div className="pt-8">
+                <EmptyState
+                  eyebrow="No Matches"
+                  title="No articles match the current search and filters."
+                  description="Try removing one of the topic filters, broadening the search query, or clearing all filters to return to the full monitor scan."
+                  tone="subtle"
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-12">
+                {visibleCategories.map((category) => (
+                  <PestelSection
+                    key={category}
+                    category={category}
+                    articles={groupedArticles[category]}
+                    isCondensed={isStickyHeaderCondensed}
+                    stickyTop={stickyStackOffset}
+                    sectionRef={setSectionRef(category)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
     </>
   );
 }

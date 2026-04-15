@@ -1,4 +1,4 @@
-export type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "dark-alt" | "dark-alt-2";
 export type ThemePreference = Theme | "system";
 
 export const THEME_STORAGE_KEY = "merd-ai-theme";
@@ -6,7 +6,13 @@ export const THEME_STORAGE_KEY = "merd-ai-theme";
 export function isThemePreference(
   value: string | null,
 ): value is ThemePreference {
-  return value === "light" || value === "dark" || value === "system";
+  return (
+    value === "light" ||
+    value === "dark" ||
+    value === "dark-alt" ||
+    value === "dark-alt-2" ||
+    value === "system"
+  );
 }
 
 export function resolveSystemTheme(): Theme {
@@ -38,7 +44,7 @@ export function applyTheme(theme: Theme) {
   }
 
   document.documentElement.dataset.theme = theme;
-  document.documentElement.style.colorScheme = theme;
+  document.documentElement.style.colorScheme = theme === "light" ? "light" : "dark";
 }
 
 export function setThemePreference(preference: ThemePreference): Theme {

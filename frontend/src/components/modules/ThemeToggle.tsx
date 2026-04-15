@@ -36,6 +36,30 @@ function MoonIcon() {
   );
 }
 
+function EclipseIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M16.75 6.25C14.19 6.53 12.19 8.7 12.19 11.34C12.19 13.97 14.18 16.14 16.74 16.43"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
+function OrbitIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 24 24" width="16">
+      <ellipse cx="12" cy="12" rx="7.5" ry="4.25" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="16.9" cy="9.4" fill="currentColor" r="1.3" />
+      <circle cx="12" cy="12" r="2.2" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
 export function ThemeToggle({ className, mode = "text" }: ThemeToggleProps) {
   const { setPreference, theme } = useTheme();
   const iconOnly = mode === "icon";
@@ -44,7 +68,7 @@ export function ThemeToggle({ className, mode = "text" }: ThemeToggleProps) {
     <div
       aria-label="Theme toggle"
       className={cn(
-        "theme-toggle-shell flex items-center gap-[var(--space-2)] rounded-[var(--radius-pill)] border border-[color:var(--color-border-subtle)] bg-[color:var(--color-surface-subtle)] p-[var(--space-1)]",
+        "theme-toggle-shell glass-panel flex items-center gap-[var(--space-2)] rounded-[var(--radius-pill)] border border-[color:var(--color-border-subtle)] bg-[color:var(--color-surface-subtle)] p-[var(--space-1)]",
         iconOnly && "gap-[var(--space-1)]",
         className,
       )}
@@ -84,6 +108,30 @@ export function ThemeToggle({ className, mode = "text" }: ThemeToggleProps) {
         variant={theme === "dark" ? "primary" : "ghost"}
       >
         {iconOnly ? <MoonIcon /> : "Dark"}
+      </Button>
+
+      <Button
+        aria-label="Use dark one mode"
+        aria-pressed={theme === "dark-alt"}
+        className={cn("theme-toggle-option", iconOnly && "px-[var(--space-2)]")}
+        data-active={theme === "dark-alt" ? "true" : undefined}
+        onClick={() => setPreference("dark-alt")}
+        size="sm"
+        variant={theme === "dark-alt" ? "primary" : "ghost"}
+      >
+        {iconOnly ? <EclipseIcon /> : "Dark 1"}
+      </Button>
+
+      <Button
+        aria-label="Use dark two mode"
+        aria-pressed={theme === "dark-alt-2"}
+        className={cn("theme-toggle-option", iconOnly && "px-[var(--space-2)]")}
+        data-active={theme === "dark-alt-2" ? "true" : undefined}
+        onClick={() => setPreference("dark-alt-2")}
+        size="sm"
+        variant={theme === "dark-alt-2" ? "primary" : "ghost"}
+      >
+        {iconOnly ? <OrbitIcon /> : "Dark 2"}
       </Button>
     </div>
   );

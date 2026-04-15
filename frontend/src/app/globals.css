@@ -2,31 +2,7 @@
 @import "../styles/tokens.css";
 @import "../styles/themes.css";
 
-@theme inline {
-  --color-background: var(--color-canvas);
-  --color-background-muted: var(--color-canvas-muted);
-  --color-background-accent: var(--color-canvas-accent);
-  --color-surface: var(--color-surface);
-  --color-surface-subtle: var(--color-surface-subtle);
-  --color-surface-strong: var(--color-surface-strong);
-  --color-surface-inverse: var(--color-surface-inverse);
-  --color-border: var(--color-border-subtle);
-  --color-border-strong: var(--color-border-strong);
-  --color-border-accent: var(--color-border-accent);
-  --color-foreground: var(--color-text-primary);
-  --color-foreground-secondary: var(--color-text-secondary);
-  --color-muted: var(--color-text-muted);
-  --color-accent: var(--color-accent-primary);
-  --color-accent-strong: var(--color-accent-strong);
-  --color-accent-soft: var(--color-accent-soft);
-  --color-accent-foreground: var(--color-text-inverse);
-  --color-success: var(--color-success-primary);
-  --color-warning: var(--color-warning-primary);
-  --color-danger: var(--color-danger-primary);
-  --font-sans: var(--font-family-body);
-  --font-serif: var(--font-family-heading);
-  --font-mono: var(--font-family-mono);
-}
+/* Theme variables removed: see tokens.css and themes.css for definitions. */
 
 @layer base {
   *,
@@ -113,6 +89,53 @@
 }
 
 @layer components {
+  html[data-theme="dark-alt-2"] body {
+    background:
+      radial-gradient(circle at top left, rgba(97, 146, 255, 0.12), transparent 28%),
+      radial-gradient(circle at 85% 12%, rgba(255, 255, 255, 0.05), transparent 18%),
+      linear-gradient(180deg, #0b0d12 0%, #10141c 100%);
+  }
+
+  html[data-theme="dark-alt-2"] .glass-panel {
+    background: var(--glass-bg-medium) !important;
+    border: 1px solid var(--glass-border-soft) !important;
+    box-shadow:
+      var(--glass-shadow),
+      inset 0 1px 0 var(--glass-highlight) !important;
+    backdrop-filter: var(--glass-blur) var(--glass-saturate) !important;
+    -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturate) !important;
+  }
+
+  html[data-theme="dark-alt-2"] .glass-panel-soft {
+    background: var(--glass-bg-soft) !important;
+    border: 1px solid var(--glass-border-soft) !important;
+    box-shadow:
+      var(--glass-shadow-soft),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: var(--glass-blur-soft) var(--glass-saturate) !important;
+    -webkit-backdrop-filter: var(--glass-blur-soft) var(--glass-saturate) !important;
+  }
+
+  html[data-theme="dark-alt-2"] .glass-panel-strong {
+    background: var(--glass-bg-strong) !important;
+    border: 1px solid var(--glass-border-strong) !important;
+    box-shadow:
+      0 14px 36px rgba(0, 0, 0, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(24px) var(--glass-saturate) !important;
+    -webkit-backdrop-filter: blur(24px) var(--glass-saturate) !important;
+  }
+
+  html[data-theme="dark-alt-2"] .theme-utility-cluster {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-radius: 0;
+    padding: 0;
+  }
+
   .minimal-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: #D8D6F8 transparent;

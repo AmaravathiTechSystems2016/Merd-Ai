@@ -72,7 +72,7 @@ export function useTheme(): UseThemeReturn {
   };
 
   const toggleTheme = () => {
-    updatePreference(theme === "dark" ? "light" : "dark");
+    updatePreference(theme === "light" ? "dark" : "light");
   };
 
   return {
